@@ -168,7 +168,7 @@
 
     function cancelSubmission(submissionId, title) {
         if (confirm(`ยกเลิกการส่งงานในหัวข้อ "${title}" ใช่ไหมครับ?`)) {
-            fetch(`http://127.0.0.1:8000/api/cancel-submission/${submissionId}`, { method: "DELETE" })
+            fetch(`/api/cancel-submission/${submissionId}`, { method: "DELETE" })
             .then(response => response.json())
             .then(data => { alert("✨ " + data.message); loadDashboardData(); });
         }
