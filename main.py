@@ -29,20 +29,6 @@ def get_db():
     finally:
         database.close()
 
-@app.on_event("startup")
-def setup_dummy_data():
-    session = db.SessionLocal()
-    if session.query(db.Student).count() == 0:
-        student1 = db.Student(id="STD001", name="สมชาย ใจดี", grade="ม.1/1", no="1")
-        student2 = db.Student(id="STD002", name="สมหญิง รักเรียน", grade="ม.1/1", no="2")
-        
-        hw1 = db.Homework(id="HW01", subject="คณิตศาสตร์", title="การบวกเศษส่วน", due_date=datetime(2026, 6, 21).date())
-        hw2 = db.Homework(id="HW02", subject="วิทยาศาสตร์", title="ระบบสุริยะ", due_date=datetime(2026, 6, 25).date())
-        
-        session.add_all([student1, student2, hw1, hw2])
-        session.commit()
-    session.close()
-
 @app.get("/generate-qr-page")
 def read_qr_page():
     return FileResponse(os.path.join("templates", "generate-qr.html"))
