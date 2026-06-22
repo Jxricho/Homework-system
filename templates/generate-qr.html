@@ -31,7 +31,6 @@
         h2 { margin: 0 0 8px 0; font-size: 24px; color: var(--primary); font-weight: 700; }
         .subtitle { margin: 0 0 24px 0; font-size: 14px; color: var(--text-light); }
         
-        /* 📱 เพิ่มกล่องปัดสไลด์ซ้าย-ขวาสำหรับตารางคิวอาร์บนจอมือถือ */
         .table-responsive {
             width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--accent);
         }
@@ -39,7 +38,6 @@
         th, td { padding: 12px 14px; font-size: 15px; border-bottom: 1px solid var(--accent); vertical-align: middle; }
         th { background-color: var(--accent); color: var(--text); font-weight: 600; }
         
-        /* 🌟 ล็อกขนาดรูปภาพให้เป็นสี่เหลี่ยมจัตุรัสไม่ผอมเบี้ยวเด็ดขาด */
         .qr-preview { width: 60px; height: 60px; object-fit: contain; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
         
         .download-btn {
@@ -50,7 +48,6 @@
         .download-btn:hover { background-color: var(--primary-hover); }
         .nav-link { display: block; text-align: center; margin-top: 24px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600; }
 
-        /* 📱 จัดการหน้าจอมือถือ */
         @media (max-width: 500px) {
             body { padding: 0; align-items: flex-start; }
             .container { margin: 0; border-radius: 0; min-height: 100vh; padding: 24px 16px; }
@@ -74,8 +71,7 @@
                     <th style="text-align: center;">ดาวน์โหลด</th>
                 </tr>
             </thead>
-            <tbody id="qrTableBody">
-                </tbody>
+            <tbody id="qrTableBody"></tbody>
         </table>
     </div>
     
@@ -83,6 +79,25 @@
 </div>
 
 <script>
+    // 🌟 ฟังก์ชันพิเศษสำหรับช่วยดาวน์โหลดรูปบนมือถือโดยตรง ไม่ให้เด้งหลุดไปหน้าเว็บอื่น
+    function triggerDownload(url, filename) {
+        fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(blobUrl);
+                a.remove();
+            })
+            .catch(() => {
+                alert("ไม่สามารถดาวน์โหลดภาพโดยตรงได้ กรุณากดค้างที่รูปภาพคิวอาร์เพื่อบันทึกแทนครับ");
+            });
+    }
+
     window.onload = function() {
         fetch("/api/students")
         .then(response => response.json())
@@ -94,8 +109,11 @@
                 return;
             }
             students.forEach(std => {
-                const qrUrl = `http://127.0.0.1:8000/api/get-qr/${std.id}`;
+                // 🌟 ปรับปรุงตรงนี้ให้ดึง URL ปัจจุบันของระบบ (ใช้ได้ทั้งเครื่องคอมและบน Render)
+                const qrUrl = `${window.location.origin}/api/get-qr/${std.id}`;
                 const row = document.createElement("tr");
+                
+                // 🌟 เปลี่ยนจากแท็ก <a> ไปใช้ปุ่ม button เรียกฟังก์ชันดาวน์โหลดแบบ Blob ปลอดภัยกับมือถือ
                 row.innerHTML = `
                     <td>
                         <b>${std.name}</b><br>
@@ -105,7 +123,7 @@
                         <img src="${qrUrl}" class="qr-preview" alt="QR Code">
                     </td>
                     <td style="text-align: center;">
-                        <a href="${qrUrl}" download="QR_${std.name}.png" class="download-btn">💾 บันทึกรูป</a>
+                        <button onclick="triggerDownload('${qrUrl}', 'QR_${std.name}.png')" class="download-btn">💾 บันทึกรูป</button>
                     </td>
                 `;
                 tbody.appendChild(row);
