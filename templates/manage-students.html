@@ -116,7 +116,7 @@
 
     function deleteStudent(id, name) {
         if (confirm(`คุณครูแน่ใจใช่ไหมว่าจะลบข้อมูลของ "${name}"?`)) {
-            fetch(`http://127.0.0.1:8000/api/delete-student/${id}`, { method: "DELETE" })
+            fetch(`/api/delete-student/${id}`, { method: "DELETE" })
             .then(response => response.json())
             .then(data => { alert("✨ " + data.message); loadStudents(); });
         }
