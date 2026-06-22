@@ -102,7 +102,7 @@
     // 2. ฟังก์ชันสั่งลบการบ้าน
     function deleteHomework(id, title) {
         if (confirm(`⚠️ คำเตือนสำคัญ!\nหากคุณครูลบการบ้าน "${title}" ประวัติการส่งงานชิ้นนี้ของนักเรียนทุกคนจะถูกลบไปด้วย\nคุณครูแน่ใจใช่ไหมครับว่าจะลบถาวร?`)) {
-            fetch(`http://127.0.0.1:8000/api/delete-homework/${id}`, {
+            fetch(`/api/delete-homework/${id}`, {
                 method: "DELETE"
             })
             .then(response => response.json())
