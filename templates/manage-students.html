@@ -89,7 +89,7 @@
 
 <script>
     function loadStudents() {
-        fetch("http://127.0.0.1:8000/api/students")
+        fetch("/api/students")
         .then(response => response.json())
         .then(students => {
             const tbody = document.getElementById("studentTableBody");
