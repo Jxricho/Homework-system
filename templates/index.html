@@ -23,13 +23,14 @@
         }
         body {
             font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text);
-            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            box-sizing: border-box;
         }
         .container {
-            width: 100%; max-width: 480px; margin: 20px;
+            width: 100%; max-width: 480px;
             background: var(--card-bg); padding: 34px 24px;
             border-radius: 24px; box-shadow: 0 10px 35px rgba(142, 111, 81, 0.08);
-            text-align: center;
+            text-align: center; box-sizing: border-box;
         }
         .header h2 { margin: 0 0 8px 0; font-size: 24px; color: var(--primary); }
         .header p { margin: 0 0 20px 0; font-size: 14px; color: var(--text-light); }
@@ -51,11 +52,11 @@
         #reader { width: 100% !important; border: none !important; border-radius: 16px; overflow: hidden; background: var(--accent) !important; }
         #reader button {
             background-color: var(--primary) !important; color: white !important; border: none !important;
-            border-radius: 10px !important; padding: 10px 20px !important; font-family: 'Sarabun', sans-serif !important;
-            font-size: 14px !important; cursor: pointer !important;
+            border-radius: 10px !important; padding: 12px 20px !important; font-family: 'Sarabun', sans-serif !important;
+            font-size: 14px !important; font-weight: 600; cursor: pointer !important; margin: 15px 0 !important;
         }
 
-        /* สไตล์โซนอัปโหลดไฟล์ (แก้ปัญหาปุ่มล็อก) */
+        /* สไตล์โซนอัปโหลดไฟล์ */
         .upload-zone {
             border: 2px dashed var(--primary); padding: 40px 20px; border-radius: 16px; background-color: var(--bg); cursor: pointer;
         }
@@ -63,11 +64,18 @@
             display: inline-block; background-color: var(--primary); color: white; padding: 12px 24px;
             border-radius: 10px; font-size: 14px; font-weight: 600; margin-top: 10px;
         }
-        /* ซ่อนอินพุตดั้งเดิม แต่เปิดช่องให้ระบบคลิกได้ */
         #hiddenFileInput { display: none; }
         
-        #previewImg { max-width: 150px; margin-top: 15px; border-radius: 8px; display: none; }
+        #previewImg { max-width: 150px; margin-top: 15px; border-radius: 8px; display: none; object-fit: contain; }
         .nav-link { display: block; text-align: center; margin-top: 24px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600; }
+
+        /* 📱 ปรับแต่งขนาดต้อนรับหน้าจอมือถือ */
+        @media (max-width: 500px) {
+            body { padding: 0; align-items: flex-start; }
+            .container { margin: 0; border-radius: 0; min-height: 100vh; padding: 24px 16px; }
+            .header h2 { font-size: 22px; }
+            .upload-zone { padding: 30px 15px; }
+        }
     </style>
 </head>
 <body>
@@ -91,7 +99,7 @@
         <div class="upload-zone" onclick="document.getElementById('hiddenFileInput').click()">
             <span style="font-size: 40px;">📄</span>
             <p style="margin: 8px 0 0 0; font-weight: 600;">คลิกตรงนี้เพื่อเลือกไฟล์ภาพ QR Code</p>
-            <div class="file-btn">เลือกรูปภาพจากในคอม</div>
+            <div class="file-btn">เลือกรูปภาพจากในคอม/มือถือ</div>
             <input type="file" id="hiddenFileInput" accept="image/*" onchange="scanLocalFile(this)">
         </div>
         <img id="previewImg" alt="Preview">
@@ -119,8 +127,6 @@
         }
     }
 
-    // ฟังก์ชันสลับโหมดเมนู
-     Palestine = false;
     function switchMode(mode) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.mode-section').forEach(sec => sec.classList.remove('active'));
@@ -134,7 +140,6 @@
         }
     }
 
-    // ⚡ ฟังก์ชันดึงรูปภาพมาแกะพิกเซล ถอดรหัสได้ทันที ไม่มีคำว่ากล่องสีแดงเออเร่อ
     function scanLocalFile(input) {
         const file = input.files[0];
         if (!file) return;
@@ -157,7 +162,7 @@
                 const code = jsQR(imageData.data, imageData.width, imageData.height);
                 
                 if (code) {
-                    goToDataPage(code.data); // วาร์ปผ่านฉลุย!
+                    goToDataPage(code.data);
                 } else {
                     alert("❌ ภาพนี้สัดส่วนยังไม่ชัดเจน หรือไม่มีข้อมูล QR Code ลองเปลี่ยนไฟล์รูปภาพดูอีกทีนะครับครู");
                 }
@@ -168,8 +173,12 @@
     }
 
     window.onload = function() {
+        // 🌟 ปรับปรุง: ตั้งค่าปิดโหมดสแกนไฟล์ภาพ (supportedScanTypes) ของฟังก์ชันกล้องดั้งเดิมทิ้งไป
         html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-            fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0
+            fps: 10, 
+            qrbox: { width: 220, height: 220 }, 
+            aspectRatio: 1.0,
+            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA] // บังคับรับเฉพาะกล้องเท่านั้น
         });
         html5QrcodeScanner.render(onScanSuccess);
     };
