@@ -120,7 +120,7 @@
     const studentId = urlParams.get('std_id');
 
     function loadDashboardData() {
-        fetch(`http://127.0.0.1:8000/api/student-dashboard/${studentId}`)
+        fetch(`/api/student-dashboard/${studentId}`)
         .then(response => response.json())
         .then(data => {
             document.getElementById("studentName").textContent = `👤 ข้อมูลของ: ${data.student.name}`;
