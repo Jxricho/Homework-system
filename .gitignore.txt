@@ -1,2 +1,3 @@
 homework.db
 __pycache__/
+*.pyc
