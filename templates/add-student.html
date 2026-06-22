@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงทะเบียนนักเรียนใหม่</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #8e6f51;
+            --primary-hover: #73563c;
+            --bg: #fdfaf6;
+            --card-bg: #ffffff;
+            --text: #4a3e3d;
+            --text-light: #8c827a;
+            --accent: #f5ebe0;
+        }
+        body {
+            font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text);
+            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .container {
+            width: 100%; max-width: 450px; margin: 20px;
+            background: var(--card-bg); padding: 34px 24px;
+            border-radius: 24px; box-shadow: 0 10px 35px rgba(142, 111, 81, 0.08);
+            box-sizing: border-box;
+        }
+        h2 { margin: 0 0 8px 0; font-size: 22px; color: var(--primary); text-align: center; font-weight: 700; }
+        .subtitle { margin: 0 0 24px 0; font-size: 14px; color: var(--text-light); text-align: center; }
+        .form-group { margin-bottom: 16px; text-align: left; }
+        label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+        input {
+            width: 100%; padding: 12px; border: 2px solid var(--accent); border-radius: 12px;
+            font-size: 15px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none;
+            color: var(--text);
+        }
+        input:focus { border-color: var(--primary); }
+        .submit-btn {
+            width: 100%; padding: 14px; background-color: var(--primary); color: white;
+            border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px;
+        }
+        .submit-btn:hover { background-color: var(--primary-hover); }
+        #message { display: none; margin-top: 15px; padding: 12px; border-radius: 12px; text-align: center; font-weight: 600; }
+        .success { background-color: #ecf3ee; color: #3b5c43; border: 1px solid #d3e2d7; }
+        .nav-link { display: block; text-align: center; margin-top: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600; }
+
+        /* 📱 จัดการหน้าจอมือถือ */
+        @media (max-width: 500px) {
+            body { align-items: flex-start; }
+            .container { margin: 0; border-radius: 0; min-height: 100vh; padding: 30px 20px; }
+            h2 { font-size: 20px; }
+            input { padding: 14px 12px; font-size: 16px; }
+            .submit-btn { padding: 16px; font-size: 17px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>👤 ลงทะเบียนนักเรียนใหม่</h2>
+    <p class="subtitle">เพิ่มรายชื่อนักเรียนเข้าสู่ระบบฐานข้อมูลโรงเรียน</p>
+    
+    <div class="form-group">
+        <label>รหัสนักเรียน (เลขสำหรับทำ QR Code เช่น STD003):</label>
+        <input type="text" id="studentId" placeholder="กรอกรหัสประจำตัวนักเรียน">
+    </div>
+    <div class="form-group">
+        <label>ชื่อ - นามสกุล:</label>
+        <input type="text" id="fullname" placeholder="เช่น เด็กชายมานะ ขยันเรียน">
+    </div>
+    <div class="form-group">
+        <label>ระดับชั้น (เช่น ม.1/1):</label>
+        <input type="text" id="grade" placeholder="เช่น ม.1/1, ป.6/2">
+    </div>
+    <div class="form-group">
+        <label>เลขที่:</label>
+        <input type="text" id="no" placeholder="เช่น 3, 15">
+    </div>
+
+    <button class="submit-btn" onclick="addStudent()">บันทึกรายชื่อนักเรียน</button>
+    <div id="message"></div>
+    <a href="/" class="nav-link">🔙 กลับไปหน้าเมนูหลัก</a>
+</div>
+
+<script>
+    function addStudent() {
+        const studentId = document.getElementById("studentId").value.trim();
+        const fullname = document.getElementById("fullname").value.trim();
+        const grade = document.getElementById("grade").value.trim();
+        const no = document.getElementById("no").value.trim();
+
+        if(!studentId || !fullname || !grade || !no) {
+            alert("กรุณากรอกข้อมูลนักเรียนให้ครบทุกช่องครับ");
+            return;
+        }
+
+        fetch("http://127.0.0.1:8000/api/add-student", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: studentId, name: fullname, grade: grade, no: no })
+        })
+        .then(response => {
+            if(!response.ok) throw new Error();
+            return response.json();
+        })
+        .then(data => {
+            const msgDiv = document.getElementById("message");
+            msgDiv.style.display = "block";
+            msgDiv.className = "success";
+            msgDiv.textContent = "✨ " + data.message;
+            
+            document.getElementById("studentId").value = "";
+            document.getElementById("fullname").value = "";
+            document.getElementById("grade").value = "";
+            document.getElementById("no").value = "";
+            
+            setTimeout(() => { msgDiv.style.display = "none"; }, 3000);
+        })
+        .catch(() => alert("❌ รหัสนักเรียนนี้มีอยู่ในระบบฐานข้อมูลแล้วครับ"));
+    }
+</script>
+</body>
+</html>

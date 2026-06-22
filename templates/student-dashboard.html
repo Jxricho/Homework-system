@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แดชบอร์ดข้อมูลนักเรียนรายบุคคล</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #8e6f51;
+            --primary-hover: #73563c;
+            --bg: #fdfaf6;
+            --card-bg: #ffffff;
+            --text: #4a3e3d;
+            --text-light: #8c827a;
+            --accent: #f5ebe0;
+            --danger: #c94c4c;
+            --danger-hover: #b03a3a;
+            --success-badge: #e6f4ea;
+            --success-text: #137333;
+            --warning-badge: #fef7e0;
+            --warning-text: #b06000;
+        }
+        body {
+            font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text);
+            margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .container {
+            width: 100%; max-width: 650px;
+            background: var(--card-bg); padding: 34px 24px;
+            border-radius: 24px; box-shadow: 0 10px 35px rgba(142, 111, 81, 0.08);
+            box-sizing: border-box;
+        }
+        .profile-card { background: var(--accent); padding: 20px; border-radius: 16px; text-align: left; margin-bottom: 24px; }
+        .profile-card h3 { margin: 0 0 10px 0; color: var(--primary); font-size: 20px; }
+        .info-grid { display: flex; flex-wrap: wrap; gap: 15px; font-size: 15px; }
+        
+        h4 { text-align: left; margin: 24px 0 10px 0; color: var(--primary); border-left: 4px solid var(--primary); padding-left: 10px; }
+        
+        .table-responsive {
+            width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--accent);
+        }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 500px; }
+        th, td { padding: 12px; font-size: 14px; border-bottom: 1px solid var(--accent); }
+        th { background-color: var(--accent); color: var(--text); font-weight: 600; }
+        
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge.success { background: var(--success-badge); color: var(--success-text); }
+        .badge.warning { background: var(--warning-badge); color: var(--warning-text); }
+        
+        .action-btn {
+            background-color: var(--danger); color: white; border: none;
+            padding: 5px 10px; border-radius: 6px; font-family: 'Sarabun', sans-serif;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+        }
+        .nav-link { display: block; text-align: center; margin-top: 24px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600; }
+
+        /* 📱 จัดการหน้าจอมือถือ */
+        @media (max-width: 500px) {
+            body { padding: 0; align-items: flex-start; }
+            .container { margin: 0; border-radius: 0; min-height: 100vh; padding: 20px 14px; }
+            .profile-card { padding: 15px; }
+            .info-grid { flex-direction: column; gap: 5px; }
+            h4 { font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="profile-card">
+        <h3 id="studentName">👤 กำลังโหลดข้อมูลนักเรียน...</h3>
+        <div class="info-grid">
+            <div>🏫 ระดับชั้น: <span id="studentGrade">-</span></div>
+            <div>🔢 เลขที่: <span id="studentNo">-</span></div>
+            <div>🆔 รหัสประจำตัว: <span id="studentIdText">-</span></div>
+        </div>
+    </div>
+    
+    <h4>📊 งานที่ส่งเรียบร้อยแล้ว (<span id="submittedCount">0</span> งาน)</h4>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>วิชา</th>
+                    <th>ชิ้นงาน</th>
+                    <th>วันที่ส่ง</th>
+                    <th style="text-align: center;">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="submittedTableBody">
+                </tbody>
+        </table>
+    </div>
+    
+    <h4>⏳ งานที่ยังค้างส่ง (<span id="pendingCount">0</span> งาน)</h4>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>วิชา</th>
+                    <th>ชิ้นงาน</th>
+                    <th>กำหนดส่ง</th>
+                    <th>สถานะ</th>
+                </tr>
+            </thead>
+            <tbody id="pendingTableBody">
+                </tbody>
+        </table>
+    </div>
+    
+    <a href="/manage-students" class="nav-link">🔙 กลับไปหน้าจัดการนักเรียน</a>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const studentId = urlParams.get('std_id');
+
+    function loadDashboardData() {
+        fetch(`http://127.0.0.1:8000/api/student-dashboard/${studentId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("studentName").textContent = `👤 ข้อมูลของ: ${data.student.name}`;
+            document.getElementById("studentGrade").textContent = data.student.grade;
+            document.getElementById("studentNo").textContent = data.student.no;
+            document.getElementById("studentIdText").textContent = data.student.id;
+            
+            const subBody = document.getElementById("submittedTableBody");
+            subBody.innerHTML = "";
+            document.getElementById("submittedCount").textContent = data.submitted_homeworks.length;
+            if(data.submitted_homeworks.length === 0) {
+                subBody.innerHTML = "<tr><td colspan='4' style='text-align:center; color:gray;'>ยังไม่มีประวัติการส่งงาน</td></tr>";
+            } else {
+                data.submitted_homeworks.forEach(hw => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td><b>${hw.subject}</b></td>
+                        <td>${hw.title}</td>
+                        <td>📅 ${hw.scanned_at}</td>
+                        <td style="text-align: center;"><button class="action-btn" onclick="cancelSubmission('${hw.submission_id}', '${hw.title}')">❌ ยกเลิก</button></td>
+                    `;
+                    subBody.appendChild(row);
+                });
+            }
+            
+            const pendBody = document.getElementById("pendingTableBody");
+            pendBody.innerHTML = "";
+            document.getElementById("pendingCount").textContent = data.pending_homeworks.length;
+            if(data.pending_homeworks.length === 0) {
+                pendBody.innerHTML = "<tr><td colspan='4' style='text-align:center; color:green; font-weight:600;'>✨ ส่งงานครบทุกวิชาแล้ว</td></tr>";
+            } else {
+                data.pending_homeworks.forEach(hw => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td><b>${hw.subject}</b></td>
+                        <td>${hw.title}</td>
+                        <td>📅 ${hw.due_date}</td>
+                        <td><span class="badge warning">⏳ ค้างส่ง</span></td>
+                    `;
+                    pendBody.appendChild(row);
+                });
+            }
+        });
+    }
+
+    function cancelSubmission(submissionId, title) {
+        if (confirm(`ยกเลิกการส่งงานในหัวข้อ "${title}" ใช่ไหมครับ?`)) {
+            fetch(`http://127.0.0.1:8000/api/cancel-submission/${submissionId}`, { method: "DELETE" })
+            .then(response => response.json())
+            .then(data => { alert("✨ " + data.message); loadDashboardData(); });
+        }
+    }
+    window.onload = loadDashboardData;
+</script>
+</body>
+</html>

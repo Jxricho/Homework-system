@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการการบ้านอัจฉริยะ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #8e6f51;
+            --primary-hover: #73563c;
+            --bg: #fdfaf6;
+            --card-bg: #ffffff;
+            --text: #4a3e3d;
+            --text-light: #8c827a;
+            --accent: #f5ebe0;
+        }
+        body {
+            font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text);
+            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .container {
+            width: 100%; max-width: 450px; margin: 20px;
+            background: var(--card-bg); padding: 40px 30px;
+            border-radius: 24px; box-shadow: 0 10px 35px rgba(142, 111, 81, 0.08);
+            box-sizing: border-box; text-align: center;
+        }
+        h1 { margin: 0 0 10px 0; font-size: 26px; color: var(--primary); font-weight: 700; }
+        .subtitle { margin: 0 0 34px 0; font-size: 14px; color: var(--text-light); }
+        
+        .menu-btn {
+            display: flex; align-items: center; width: 100%; padding: 18px 20px;
+            margin: 14px 0; background-color: var(--card-bg); color: var(--text);
+            border: 2px solid var(--accent); border-radius: 16px; font-size: 16px;
+            font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+            box-sizing: border-box; text-decoration: none;
+        }
+        .menu-btn:hover {
+            background-color: var(--primary); color: white; border-color: var(--primary);
+            transform: translateY(-2px); box-shadow: 0 5px 15px rgba(142, 111, 81, 0.15);
+        }
+        .menu-btn:active { transform: translateY(0); }
+        .icon { font-size: 22px; margin-right: 15px; }
+
+        /* 📱 ปรับแต่งสำหรับหน้าจอมือถือ */
+        @media (max-width: 500px) {
+            body { align-items: flex-start; }
+            .container {
+                margin: 0; border-radius: 0; min-height: 100vh; padding: 30px 20px;
+            }
+            h1 { font-size: 24px; }
+            .menu-btn { padding: 16px 15px; font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>ระบบตรวจการบ้าน</h1>
+    <p class="subtitle">ยินดีต้อนรับคุณครู กรุณาเลือกรายการที่ต้องการทำ</p>
+    
+    <a href="/scan" class="menu-btn">
+        <span class="icon">📸</span> สแกนคิวอาร์โค้ดตรวจงาน
+    </a>
+    
+    <a href="/add-homework" class="menu-btn">
+        <span class="icon">➕</span> เพิ่มรายการการบ้านใหม่
+    </a>
+    
+    <a href="/add-student" class="menu-btn">
+        <span class="icon">👤</span> เพิ่มข้อมูลนักเรียนใหม่
+    </a>
+
+    <a href="/manage-students" class="menu-btn" style="border-color: #f2d6d6;">
+        <span class="icon">⚙️</span> จัดการรายชื่อ / ลบข้อมูลนักเรียน
+    </a>
+
+    <a href="/manage-homeworks" class="menu-btn" style="border-color: #fcebd2;">
+        <span class="icon">📝</span> จัดการรายการการบ้าน / ลบหัวข้องาน
+    </a>
+
+    <a href="/generate-qr-page" class="menu-btn" style="border-color: #e2ebd5;">
+        <span class="icon">🖨️</span> ออกรหัส / พิมพ์ QR Code นักเรียน
+    </a>
+</div>
+
+</body>
+</html>

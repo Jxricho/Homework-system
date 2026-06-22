@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการข้อมูลนักเรียน</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #8e6f51;
+            --primary-hover: #73563c;
+            --bg: #fdfaf6;
+            --card-bg: #ffffff;
+            --text: #4a3e3d;
+            --text-light: #8c827a;
+            --accent: #f5ebe0;
+            --danger: #c94c4c;
+            --danger-hover: #b03a3a;
+        }
+        body {
+            font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text);
+            margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .container {
+            width: 100%; max-width: 600px;
+            background: var(--card-bg); padding: 34px 24px;
+            border-radius: 24px; box-shadow: 0 10px 35px rgba(142, 111, 81, 0.08);
+            box-sizing: border-box; text-align: center;
+        }
+        h2 { margin: 0 0 8px 0; font-size: 24px; color: var(--primary); font-weight: 700; }
+        .subtitle { margin: 0 0 24px 0; font-size: 14px; color: var(--text-light); }
+        
+        /* 📱 กล่องควบคุมตารางให้เลื่อนซ้าย-ขวาได้บนมือถือ */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 12px;
+            border: 1px solid var(--accent);
+        }
+        
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 500px; }
+        th, td { padding: 12px 14px; font-size: 15px; border-bottom: 1px solid var(--accent); }
+        th { background-color: var(--accent); color: var(--text); font-weight: 600; }
+        
+        .delete-btn {
+            background-color: var(--danger); color: white; border: none;
+            padding: 6px 12px; border-radius: 8px; font-family: 'Sarabun', sans-serif;
+            font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+        }
+        .delete-btn:hover { background-color: var(--danger-hover); }
+        .nav-link { display: block; text-align: center; margin-top: 24px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600; }
+
+        /* 📱 จัดการหน้าจอมือถือ */
+        @media (max-width: 500px) {
+            body { padding: 0; align-items: flex-start; }
+            .container { margin: 0; border-radius: 0; min-height: 100vh; padding: 24px 16px; }
+            h2 { font-size: 20px; }
+            th, td { padding: 10px 8px; font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🗂️ รายชื่อนักเรียนในระบบทั้งหมด</h2>
+    <p class="subtitle">คุณครูสามารถตรวจสอบรายชื่อ หรือกดลบรายชื่อนักเรียนได้จากหน้านี้</p>
+    
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>รหัส QR</th>
+                    <th>ชื่อ-นามสกุล</th>
+                    <th>ชั้น/เลขที่</th>
+                    <th style="text-align: center;">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="studentTableBody">
+                </tbody>
+        </table>
+    </div>
+    
+    <a href="/" class="nav-link">🔙 กลับไปหน้าเมนูหลัก</a>
+</div>
+
+<script>
+    function loadStudents() {
+        fetch("http://127.0.0.1:8000/api/students")
+        .then(response => response.json())
+        .then(students => {
+            const tbody = document.getElementById("studentTableBody");
+            tbody.innerHTML = "";
+            if(students.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; color:gray;'>ไม่มีข้อมูลนักเรียนในระบบ</td></tr>";
+                return;
+            }
+            students.forEach(std => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td><code>${std.id}</code></td>
+                    <td><b>${std.name}</b></td>
+                    <td>${std.grade} เลขที่ ${std.no}</td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <a href="/student-dashboard?std_id=${std.id}" style="display:inline-block; background-color:var(--primary); color:white; text-decoration:none; padding:6px 12px; border-radius:8px; font-size:13px; font-weight:600; margin-right:5px;">ดูประวัติงาน</a>
+                        <button class="delete-btn" onclick="deleteStudent('${std.id}', '${std.name}')">ลบ</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        });
+    }
+
+    function deleteStudent(id, name) {
+        if (confirm(`คุณครูแน่ใจใช่ไหมว่าจะลบข้อมูลของ "${name}"?`)) {
+            fetch(`http://127.0.0.1:8000/api/delete-student/${id}`, { method: "DELETE" })
+            .then(response => response.json())
+            .then(data => { alert("✨ " + data.message); loadStudents(); });
+        }
+    }
+    window.onload = loadStudents;
+</script>
+</body>
+</html>

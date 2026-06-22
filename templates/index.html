@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบตรวจการบ้าน - หน้าสแกนอัจฉริยะ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #8e6f51;
+            --primary-hover: #73563c;
+            --bg: #fdfaf6;
+            --card-bg: #ffffff;
+            --text: #4a3e3d;
+            --text-light: #8c827a;
+            --accent: #f5ebe0;
+        }
+        body {
+            font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text);
+            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .container {
+            width: 100%; max-width: 480px; margin: 20px;
+            background: var(--card-bg); padding: 34px 24px;
+            border-radius: 24px; box-shadow: 0 10px 35px rgba(142, 111, 81, 0.08);
+            text-align: center;
+        }
+        .header h2 { margin: 0 0 8px 0; font-size: 24px; color: var(--primary); }
+        .header p { margin: 0 0 20px 0; font-size: 14px; color: var(--text-light); }
+        
+        /* แถบสลับโหมด */
+        .tab-container {
+            display: flex; background: var(--accent); padding: 4px; border-radius: 12px; margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1; padding: 10px; background: none; border: none; font-family: 'Sarabun', sans-serif;
+            font-size: 14px; font-weight: 600; color: var(--text); cursor: pointer; border-radius: 8px; transition: all 0.2s;
+        }
+        .tab-btn.active { background: var(--card-bg); color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        
+        .mode-section { display: none; }
+        .mode-section.active { display: block; }
+        
+        /* สไตล์กล้องสด */
+        #reader { width: 100% !important; border: none !important; border-radius: 16px; overflow: hidden; background: var(--accent) !important; }
+        #reader button {
+            background-color: var(--primary) !important; color: white !important; border: none !important;
+            border-radius: 10px !important; padding: 10px 20px !important; font-family: 'Sarabun', sans-serif !important;
+            font-size: 14px !important; cursor: pointer !important;
+        }
+
+        /* สไตล์โซนอัปโหลดไฟล์ (แก้ปัญหาปุ่มล็อก) */
+        .upload-zone {
+            border: 2px dashed var(--primary); padding: 40px 20px; border-radius: 16px; background-color: var(--bg); cursor: pointer;
+        }
+        .file-btn {
+            display: inline-block; background-color: var(--primary); color: white; padding: 12px 24px;
+            border-radius: 10px; font-size: 14px; font-weight: 600; margin-top: 10px;
+        }
+        /* ซ่อนอินพุตดั้งเดิม แต่เปิดช่องให้ระบบคลิกได้ */
+        #hiddenFileInput { display: none; }
+        
+        #previewImg { max-width: 150px; margin-top: 15px; border-radius: 8px; display: none; }
+        .nav-link { display: block; text-align: center; margin-top: 24px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>📸 สแกนตรวจการบ้าน</h2>
+        <p>คุณครูสามารถเลือกเปิดกล้องสด หรืออัปโหลดไฟล์ภาพเข้ามาก็ได้ครับ</p>
+    </div>
+    
+    <div class="tab-container">
+        <button id="tabCamera" class="tab-btn active" onclick="switchMode('camera')">🎥 เปิดกล้องสแกนสด</button>
+        <button id="tabFile" class="tab-btn" onclick="switchMode('file')">📁 อัปโหลดไฟล์รูปภาพ</button>
+    </div>
+    
+    <div id="sectionCamera" class="mode-section active">
+        <div id="reader"></div>
+    </div>
+    
+    <div id="sectionFile" class="mode-section">
+        <div class="upload-zone" onclick="document.getElementById('hiddenFileInput').click()">
+            <span style="font-size: 40px;">📄</span>
+            <p style="margin: 8px 0 0 0; font-weight: 600;">คลิกตรงนี้เพื่อเลือกไฟล์ภาพ QR Code</p>
+            <div class="file-btn">เลือกรูปภาพจากในคอม</div>
+            <input type="file" id="hiddenFileInput" accept="image/*" onchange="scanLocalFile(this)">
+        </div>
+        <img id="previewImg" alt="Preview">
+    </div>
+    
+    <a href="/" class="nav-link">🔙 กลับไปหน้าเมนูหลัก</a>
+</div>
+
+<script>
+    let html5QrcodeScanner;
+
+    function onScanSuccess(decodedText) {
+        goToDataPage(decodedText);
+    }
+
+    function goToDataPage(studentId) {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear().then(() => {
+                window.location.href = `data.html?std_id=${studentId}`;
+            }).catch(() => {
+                window.location.href = `data.html?std_id=${studentId}`;
+            });
+        } else {
+            window.location.href = `data.html?std_id=${studentId}`;
+        }
+    }
+
+    // ฟังก์ชันสลับโหมดเมนู
+     Palestine = false;
+    function switchMode(mode) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.mode-section').forEach(sec => sec.classList.remove('active'));
+        
+        if (mode === 'camera') {
+            document.getElementById('tabCamera').classList.add('active');
+            document.getElementById('sectionCamera').classList.add('active');
+        } else {
+            document.getElementById('tabFile').classList.add('active');
+            document.getElementById('sectionFile').classList.add('active');
+        }
+    }
+
+    // ⚡ ฟังก์ชันดึงรูปภาพมาแกะพิกเซล ถอดรหัสได้ทันที ไม่มีคำว่ากล่องสีแดงเออเร่อ
+    function scanLocalFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const imgElement = document.getElementById("previewImg");
+        imgElement.src = URL.createObjectURL(file);
+        imgElement.style.display = "inline-block";
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const image = new Image();
+            image.onload = function() {
+                const canvas = document.createElement("canvas");
+                const context = canvas.getContext("2d");
+                canvas.width = image.width;
+                canvas.height = image.height;
+                context.drawImage(image, 0, 0, image.width, image.height);
+                
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    goToDataPage(code.data); // วาร์ปผ่านฉลุย!
+                } else {
+                    alert("❌ ภาพนี้สัดส่วนยังไม่ชัดเจน หรือไม่มีข้อมูล QR Code ลองเปลี่ยนไฟล์รูปภาพดูอีกทีนะครับครู");
+                }
+            };
+            image.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    window.onload = function() {
+        html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+            fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0
+        });
+        html5QrcodeScanner.render(onScanSuccess);
+    };
+</script>
+
+</body>
+</html>

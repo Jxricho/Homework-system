@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบตรวจการบ้าน - ข้อมูลนักเรียน</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #8e6f51;
+            --primary-hover: #73563c;
+            --bg: #fdfaf6;
+            --card-bg: #ffffff;
+            --text: #4a3e3d;
+            --text-light: #8c827a;
+            --accent: #f5ebe0;
+        }
+        body {
+            font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text);
+            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .container {
+            width: 100%; max-width: 480px; margin: 20px;
+            background: var(--card-bg); padding: 34px 24px;
+            border-radius: 24px; box-shadow: 0 10px 35px rgba(142, 111, 81, 0.08);
+        }
+        .profile-header { background: var(--primary); color: white; padding: 16px; border-radius: 14px; text-align: center; margin-bottom: 20px; }
+        .profile-header h3 { margin: 0; font-size: 20px; }
+        .student-details { background: var(--accent); padding: 18px; border-radius: 14px; margin-bottom: 20px; }
+        .info-row { font-size: 16px; margin-bottom: 8px; }
+        .info-row span { font-weight: 600; }
+        .divider { border: 0; height: 1px; background: rgba(142, 111, 81, 0.12); margin: 16px 0; }
+        .section-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--primary); }
+        .hw-btn {
+            display: block; width: 100%; padding: 14px 18px; margin: 10px 0;
+            background-color: var(--card-bg); color: var(--text); border: 2px solid var(--accent);
+            border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+        }
+        .hw-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); }
+        #statusMessage { display: none; margin-top: 20px; padding: 14px; border-radius: 12px; font-weight: 600; text-align: center; }
+        .success { background-color: #ecf3ee; color: #3b5c43; border: 1px solid #d3e2d7; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="profile-header">
+        <h3>ตรวจสอบข้อมูลนักเรียน</h3>
+    </div>
+    
+    <div class="student-details">
+        <div class="info-row">👤 ชื่อ-นามสกุล: <span id="stName">กำลังโหลด...</span></div>
+        <div class="info-row">🏫 ระดับชั้น: <span id="stClass">กำลังโหลด...</span></div>
+        <div class="info-row">🔢 เลขที่: <span id="stNo">กำลังโหลด...</span></div>
+    </div>
+    
+    <div class="divider"></div>
+    <div class="section-title">📚 เลือกวิชาที่ต้องการบันทึกการส่งงาน:</div>
+    <div id="homeworkButtons"></div>
+
+    <div id="statusMessage"></div>
+</div>
+
+<script>
+    const BASE_URL = "http://127.0.0.1:8000/api";
+    let currentStudentId = "";
+
+    // ดึงค่ารหัสนักเรียน (std_id) จากพารามิเตอร์บน URL ที่ส่งมาจากหน้าแรก
+    const urlParams = new URLSearchParams(window.location.search);
+    currentStudentId = urlParams.get('std_id');
+
+    window.onload = function() {
+        if (!currentStudentId) {
+            alert("ไม่พบข้อมูลรหัสนักเรียนย้อนกลับไปหน้าสแกน");
+            window.location.href = "index.html";
+            return;
+        }
+
+        // ยิง API ไปหาหลังบ้านเพื่อดึงข้อมูลจาก DB จริงมาโชว์ในหน้านี้
+        fetch(`${BASE_URL}/scan-student`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ student_id: currentStudentId })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error();
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById("stName").textContent = data.student.name;
+            document.getElementById("stClass").textContent = data.student.grade;
+            document.getElementById("stNo").textContent = data.student.no;
+            
+            const btnContainer = document.getElementById("homeworkButtons");
+            btnContainer.innerHTML = "";
+            
+            if (data.available_homeworks.length === 0) {
+                btnContainer.innerHTML = "<p style='color:red; text-align:center;'>วันนี้ไม่มีการบ้านที่เปิดให้ส่ง</p>";
+                setTimeout(() => { window.location.href = "index.html"; }, 3000);
+                return;
+            }
+
+            data.available_homeworks.forEach(hw => {
+                const btn = document.createElement("button");
+                btn.className = "hw-btn";
+                btn.textContent = `📖  วิชา${hw.subject} - ${hw.title}`;
+                btn.onclick = () => selectHomework(hw.id);
+                btnContainer.appendChild(btn);
+            });
+        })
+        .catch(error => {
+            alert("❌ ไม่พบรหัสนักเรียนคนนี้ในฐานข้อมูล");
+            window.location.href = "index.html";
+        });
+    };
+
+    function selectHomework(homeworkId) {
+        fetch(`${BASE_URL}/submit-homework`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ student_id: currentStudentId, homework_id: homeworkId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const statusDiv = document.getElementById("statusMessage");
+            statusDiv.style.display = "block";
+            statusDiv.className = "success";
+            statusDiv.innerHTML = `✨ ${data.message}`;
+
+            // เมื่อบันทึกสำเร็จ ค้างคำว่าสำเร็จไว้ 2 วินาที แล้วย้ายหน้าต่างเว็บกลับไปที่ index.html เพื่อสแกนคนต่อไป
+            setTimeout(() => {
+                window.location.href = "/";
+            }, 2000);
+        });
+    }
+</script>
+
+</body>
+</html>
