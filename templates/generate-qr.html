@@ -7,61 +7,34 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
     <style>
-        :root {
-            --primary: #8e6f51;
-            --primary-hover: #73563c;
-            --bg: #fdfaf6;
-            --card-bg: #ffffff;
-            --text: #4a3e3d;
-            --text-light: #8c827a;
-            --accent: #f5ebe0;
-        }
-        body {
-            font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text);
-            margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
-        }
-        .container {
-            width: 100%; max-width: 550px;
-            background: var(--card-bg); padding: 34px 24px;
-            border-radius: 24px; box-shadow: 0 10px 35px rgba(142, 111, 81, 0.08);
-            box-sizing: border-box; text-align: center;
-        }
+        :root { --primary: #8e6f51; --bg: #fdfaf6; --card-bg: #ffffff; --text: #4a3e3d; --accent: #f5ebe0; }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 550px; background: var(--card-bg); padding: 34px 24px; border-radius: 24px; box-shadow: 0 10px 35px rgba(142, 111, 81, 0.08); box-sizing: border-box; text-align: center; }
         h2 { margin: 0 0 8px 0; font-size: 24px; color: var(--primary); font-weight: 700; }
-        .subtitle { margin: 0 0 24px 0; font-size: 14px; color: var(--text-light); }
-        
-        .table-responsive {
-            width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--accent);
-        }
+        .filter-section { margin: 15px 0 20px 0; text-align: left; background: var(--accent); padding: 12px 16px; border-radius: 12px; display: flex; align-items: center; gap: 10px; }
+        select { padding: 8px 12px; font-family: 'Sarabun'; border-radius: 8px; border: 1px solid var(--primary); font-size: 14px; outline: none; }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--accent); }
         table { width: 100%; border-collapse: collapse; text-align: left; min-width: 480px; }
         th, td { padding: 12px 14px; font-size: 15px; border-bottom: 1px solid var(--accent); vertical-align: middle; }
         th { background-color: var(--accent); color: var(--text); font-weight: 600; }
-        
         .qr-preview { width: 60px; height: 60px; object-fit: contain; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-        
-        .download-btn {
-            display: inline-block; background-color: var(--primary); color: white; border: none;
-            padding: 8px 14px; border-radius: 8px; font-family: 'Sarabun', sans-serif;
-            font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: background 0.2s;
-        }
-        .download-btn:hover { background-color: var(--primary-hover); }
+        .download-btn { display: inline-block; background-color: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-family: 'Sarabun'; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
         .nav-link { display: block; text-align: center; margin-top: 24px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600; }
-
-        @media (max-width: 500px) {
-            body { padding: 0; align-items: flex-start; }
-            .container { margin: 0; border-radius: 0; min-height: 100vh; padding: 24px 16px; }
-            h2 { font-size: 20px; }
-            th, td { padding: 10px; font-size: 14px; }
-        }
+        @media (max-width: 500px) { body { padding: 0; align-items: flex-start; } .container { margin: 0; border-radius: 0; min-height: 100vh; padding: 24px 16px; } }
     </style>
 </head>
 <body>
-
 <div class="container">
     <h2>🖨️ ระบบสร้าง QR Code สำหรับนักเรียน</h2>
-    <p class="subtitle">คุณครูสามารถบันทึกภาพคิวอาร์โค้ดของนักเรียนเพื่อนำไปปริ้นต์แจกได้จากหน้านี้ครับ</p>
     
+    <div class="filter-section">
+        <label style="font-weight:600;">🔍 สั่งพิมพ์แยกตามห้อง:</label>
+        <select id="qrGradeFilter" onchange="filterQRStudents()">
+            <option value="all">แสดงทั้งหมดทุกชั้นเรียน</option>
+        </select>
+    </div>
+
     <div class="table-responsive">
         <table>
             <thead>
@@ -74,61 +47,68 @@
             <tbody id="qrTableBody"></tbody>
         </table>
     </div>
-    
     <a href="/" class="nav-link">🔙 กลับไปหน้าเมนูหลัก</a>
 </div>
-
 <script>
-    // 🌟 ฟังก์ชันพิเศษสำหรับช่วยดาวน์โหลดรูปบนมือถือโดยตรง ไม่ให้เด้งหลุดไปหน้าเว็บอื่น
+    let allQRStudents = [];
+
     function triggerDownload(url, filename) {
-        fetch(url)
-            .then(response => response.blob())
-            .then(blob => {
-                const blobUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(blobUrl);
-                a.remove();
-            })
-            .catch(() => {
-                alert("ไม่สามารถดาวน์โหลดภาพโดยตรงได้ กรุณากดค้างที่รูปภาพคิวอาร์เพื่อบันทึกแทนครับ");
-            });
+        fetch(url).then(res => res.blob()).then(blob => {
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = blobUrl; a.download = filename;
+            document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(blobUrl); a.remove();
+        }).catch(() => alert("กรุณากดค้างที่รูปภาพคิวอาร์เพื่อบันทึกแทนครับ"));
     }
 
     window.onload = function() {
         fetch("/api/students")
-        .then(response => response.json())
+        .then(res => res.json())
         .then(students => {
-            const tbody = document.getElementById("qrTableBody");
-            tbody.innerHTML = "";
-            if(students.length === 0) {
-                tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:gray;'>ไม่มีข้อมูลนักเรียนสำหรับสร้าง QR Code</td></tr>";
-                return;
-            }
-            students.forEach(std => {
-                // 🌟 ปรับปรุงตรงนี้ให้ดึง URL ปัจจุบันของระบบ (ใช้ได้ทั้งเครื่องคอมและบน Render)
-                const qrUrl = `${window.location.origin}/api/get-qr/${std.id}`;
-                const row = document.createElement("tr");
-                
-                // 🌟 เปลี่ยนจากแท็ก <a> ไปใช้ปุ่ม button เรียกฟังก์ชันดาวน์โหลดแบบ Blob ปลอดภัยกับมือถือ
-                row.innerHTML = `
-                    <td>
-                        <b>${std.name}</b><br>
-                        <span style="font-size:12px; color:gray;">ชั้น ${std.grade} เลขที่ ${std.no}</span>
-                    </td>
-                    <td style="text-align: center;">
-                        <img src="${qrUrl}" class="qr-preview" alt="QR Code">
-                    </td>
-                    <td style="text-align: center;">
-                        <button onclick="triggerDownload('${qrUrl}', 'QR_${std.name}.png')" class="download-btn">💾 บันทึกรูป</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
+            allQRStudents = students;
+            const grades = [...new Set(students.map(s => s.grade))].sort();
+            const filterSelect = document.getElementById("qrGradeFilter");
+            grades.forEach(g => {
+                const opt = document.createElement("option"); opt.value = g; opt.textContent = `ชั้น ${g}`;
+                filterSelect.appendChild(opt);
             });
+            renderQRTable(allQRStudents);
         });
+    }
+
+    function renderQRTable(data) {
+        const tbody = document.getElementById("qrTableBody");
+        tbody.innerHTML = "";
+        if(data.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:gray;'>ไม่มีข้อมูลนักเรียนสำหรับสร้าง QR Code</td></tr>";
+            return;
+        }
+        data.sort((a,b) => parseInt(a.no) - parseInt(b.no));
+        data.forEach(std => {
+            const qrUrl = `${window.location.origin}/api/get-qr/${std.id}`;
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>
+                    <b>${std.name}</b> ${std.nickname ? `(${std.nickname})` : ''}<br>
+                    <span style="font-size:12px; color:gray;">ชั้น ${std.grade} เลขที่ ${std.no}</span>
+                </td>
+                <td style="text-align: center;">
+                    <img src="${qrUrl}" class="qr-preview" alt="QR Code">
+                </td>
+                <td style="text-align: center;">
+                    <button onclick="triggerDownload('${qrUrl}', 'QR_${std.name}.png')" class="download-btn">💾 บันทึกรูป</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function filterQRStudents() {
+        const selectedGrade = document.getElementById("qrGradeFilter").value;
+        if(selectedGrade === "all") {
+            renderQRTable(allQRStudents);
+        } else {
+            renderQRTable(allQRStudents.filter(s => s.grade === selectedGrade));
+        }
     }
 </script>
 </body>
