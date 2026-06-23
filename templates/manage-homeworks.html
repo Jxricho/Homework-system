@@ -115,18 +115,38 @@
     function closeModal() { document.getElementById("editModal").style.display = "none"; }
 
     function submitEdit() {
-        const id = document.getElementById("editHwId").value;
-        const subject = document.getElementById("editSubject").value.trim();
-        const title = document.getElementById("editTitle").value.trim();
-        const due_date = document.getElementById("editDueDate").value;
+        const hwId = document.getElementById("editHwId").value;
+        const subjectName = document.getElementById("editSubject").value.trim();
+        const titleName = document.getElementById("editTitle").value.trim();
+        const dueDateValue = document.getElementById("editDueDate").value;
 
-        fetch(`/api/update-homework/${id}`, {
+        if(!hwId || !subjectName || !titleName || !dueDateValue) {
+            alert("กรุณากรอกข้อมูลให้ครบทุกช่องก่อนบันทึกครับ");
+            return;
+        }
+
+        fetch(`/api/update-homework/${hwId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id, subject, title, due_date })
+            body: JSON.stringify({ 
+                id: hwId,               // 🌟 ล็อกชื่อตัวแปร 'id' ส่งค่าไปให้ Python ชัดๆ
+                subject: subjectName,   // 🌟 ล็อกชื่อตัวแปร 'subject'
+                title: titleName,       // 🌟 ล็อกชื่อตัวแปร 'title'
+                due_date: dueDateValue  // 🌟 ล็อกชื่อตัวแปร 'due_date'
+            })
         })
-        .then(res => res.json())
-        .then(data => { alert("✨ " + data.message); closeModal(); loadHomeworks(); });
+        .then(res => {
+            if(!res.ok) throw new Error();
+            return res.json();
+        })
+        .then(data => { 
+            alert("✨ " + data.message); 
+            closeModal(); 
+            loadHomeworks(); 
+        })
+        .catch(() => {
+            alert("❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้งครับครู");
+        });
     }
 
     function deleteHomework(id, title) {
