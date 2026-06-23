@@ -7,51 +7,32 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
     <style>
-        :root {
-            --primary: #8e6f51;
-            --primary-hover: #73563c;
-            --bg: #fdfaf6;
-            --card-bg: #ffffff;
-            --text: #4a3e3d;
-            --text-light: #8c827a;
-            --accent: #f5ebe0;
-            --danger: #c94c4c;
-            --danger-hover: #b03a3a;
-        }
-        body {
-            font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text);
-            margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
-        }
-        .container {
-            width: 100%; max-width: 650px;
-            background: var(--card-bg); padding: 34px 24px;
-            border-radius: 24px; box-shadow: 0 10px 35px rgba(142, 111, 81, 0.08);
-            box-sizing: border-box; text-align: center;
-        }
+        :root { --primary: #8e6f51; --primary-hover: #73563c; --bg: #fdfaf6; --card-bg: #ffffff; --text: #4a3e3d; --accent: #f5ebe0; --danger: #c94c4c; --success: #3b5c43; }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 680px; background: var(--card-bg); padding: 34px 24px; border-radius: 24px; box-shadow: 0 10px 35px rgba(142, 111, 81, 0.08); box-sizing: border-box; text-align: center; }
         h2 { margin: 0 0 8px 0; font-size: 24px; color: var(--primary); font-weight: 700; }
-        .subtitle { margin: 0 0 24px 0; font-size: 14px; color: var(--text-light); }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left; }
         th, td { padding: 12px 14px; font-size: 15px; border-bottom: 1px solid var(--accent); }
         th { background-color: var(--accent); color: var(--text); font-weight: 600; }
-        
-        .delete-btn {
-            background-color: var(--danger); color: white; border: none;
-            padding: 6px 12px; border-radius: 8px; font-family: 'Sarabun', sans-serif;
-            font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s;
-        }
-        .delete-btn:hover { background-color: var(--danger-hover); }
+        .btn { border: none; padding: 6px 12px; border-radius: 8px; font-family: 'Sarabun'; font-size: 13px; font-weight: 600; cursor: pointer; color: white; }
+        .edit-btn { background-color: #f0a85d; margin-right: 5px; }
+        .delete-btn { background-color: var(--danger); }
         .nav-link { display: block; text-align: center; margin-top: 24px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600; }
+        
+        /* 🌟 สไตล์กล่องหน้าต่างป๊อปอัปสำหรับแก้ไขงาน */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 400px; text-align: left; }
+        .modal-content h3 { margin: 0 0 15px 0; color: var(--primary); }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid var(--accent); border-radius: 8px; box-sizing: border-box; font-family: 'Sarabun'; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
     </style>
 </head>
 <body>
-
 <div class="container">
     <h2>📖 รายการการบ้านในระบบทั้งหมด</h2>
-    <p class="subtitle">คุณครูสามารถตรวจสอบรายการงาน หรือกดลบหัวข้อการบ้านที่กรอกผิด/หมดเขตแล้วได้จากหน้านี้</p>
-    
     <table>
         <thead>
             <tr>
@@ -62,27 +43,48 @@
                 <th style="text-align: center;">จัดการ</th>
             </tr>
         </thead>
-        <tbody id="hwTableBody">
-            </tbody>
+        <tbody id="hwTableBody"></tbody>
     </table>
-    
     <a href="/" class="nav-link">🔙 กลับไปหน้าเมนูหลัก</a>
 </div>
 
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle">📝 แก้ไขข้อมูลการบ้าน</h3>
+        <input type="hidden" id="editHwId">
+        <div class="form-group">
+            <label>ชื่อวิชา:</label>
+            <input type="text" id="editSubject">
+        </div>
+        <div class="form-group">
+            <label>หัวข้อชิ้นงาน:</label>
+            <input type="text" id="editTitle">
+        </div>
+        <div class="form-group">
+            <label>กำหนดวันส่งท้าย (Due Date):</label>
+            <input type="date" id="editDueDate">
+        </div>
+        <div class="modal-actions">
+            <button class="btn" style="background-color:gray;" onclick="closeModal()">ยกเลิก</button>
+            <button class="btn" style="background-color:var(--primary);" onclick="submitEdit()">บันทึกการแก้ไข</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    // 1. ดึงข้อมูลการบ้านทั้งหมดมาโชว์ตอนเปิดหน้า
+    let currentHomeworks = [];
+
     function loadHomeworks() {
         fetch("/api/homeworks")
-        .then(response => response.json())
+        .then(res => res.json())
         .then(homeworks => {
+            currentHomeworks = homeworks;
             const tbody = document.getElementById("hwTableBody");
             tbody.innerHTML = "";
-            
             if(homeworks.length === 0) {
                 tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:gray;'>ไม่มีข้อมูลการบ้านในระบบ</td></tr>";
                 return;
             }
-
             homeworks.forEach(hw => {
                 const row = document.createElement("tr");
                 row.innerHTML = `
@@ -90,8 +92,9 @@
                     <td><b>${hw.subject}</b></td>
                     <td>${hw.title}</td>
                     <td>📅 ${hw.due_date}</td>
-                    <td style="text-align: center;">
-                        <button class="delete-btn" onclick="deleteHomework('${hw.id}', '${hw.title}')">ลบการบ้าน</button>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <button class="btn edit-btn" onclick="openEditModal('${hw.id}')">✏️ แก้ไข</button>
+                        <button class="btn delete-btn" onclick="deleteHomework('${hw.id}', '${hw.title}')">ลบ</button>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -99,21 +102,40 @@
         });
     }
 
-    // 2. ฟังก์ชันสั่งลบการบ้าน
-    function deleteHomework(id, title) {
-        if (confirm(`⚠️ คำเตือนสำคัญ!\nหากคุณครูลบการบ้าน "${title}" ประวัติการส่งงานชิ้นนี้ของนักเรียนทุกคนจะถูกลบไปด้วย\nคุณครูแน่ใจใช่ไหมครับว่าจะลบถาวร?`)) {
-            fetch(`/api/delete-homework/${id}`, {
-                method: "DELETE"
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert("✨ " + data.message);
-                loadHomeworks(); // รีเฟรชตารางงานใหม่ทันที
-            })
-            .catch(err => alert("เกิดข้อผิดพลาดในการลบข้อมูล"));
-        }
+    function openEditModal(id) {
+        const hw = currentHomeworks.find(h => h.id === id);
+        if(!hw) return;
+        document.getElementById("editHwId").value = hw.id;
+        document.getElementById("editSubject").value = hw.subject;
+        document.getElementById("editTitle").value = hw.title;
+        document.getElementById("editDueDate").value = hw.due_date;
+        document.getElementById("editModal").style.display = "flex";
     }
 
+    function closeModal() { document.getElementById("editModal").style.display = "none"; }
+
+    function submitEdit() {
+        const id = document.getElementById("editHwId").value;
+        const subject = document.getElementById("editSubject").value.trim();
+        const title = document.getElementById("editTitle").value.trim();
+        const due_date = document.getElementById("editDueDate").value;
+
+        fetch(`/api/update-homework/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, subject, title, due_date })
+        })
+        .then(res => res.json())
+        .then(data => { alert("✨ " + data.message); closeModal(); loadHomeworks(); });
+    }
+
+    function deleteHomework(id, title) {
+        if (confirm(`คุณครูแน่ใจใช่ไหมว่าจะลบ "${title}" ถาวร?`)) {
+            fetch(`/api/delete-homework/${id}`, { method: "DELETE" })
+            .then(res => res.json())
+            .then(data => { alert("✨ " + data.message); loadHomeworks(); });
+        }
+    }
     window.onload = loadHomeworks;
 </script>
 </body>
