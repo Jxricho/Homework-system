@@ -4,3 +4,4 @@ sqlalchemy
 qrcode
 pillow
 python-multipart
+psycopg2-binary
