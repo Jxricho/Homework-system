@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 # 🌟 แก้ไขตรงนี้: เอาลิงก์ URI ที่ก๊อบปี้มาจาก Supabase ในส่วนที่ 1 มาวางทับตรงนี้ได้เลยครับครู
 # (อย่าลืมเปลี่ยนตรงรหัสผ่านให้ถูกต้องนะครับ)
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres.hlxkyxzomfvwwvcmbyxj:[YOUR-PASSWORD]@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres.hlxkyxzomfvwwvcmbyxj:Jxricho130768@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
 
 # ปรับการตั้งค่า Engine ให้รองรับการเชื่อมต่อผ่านระบบคลาวด์ออนไลน์
 engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
