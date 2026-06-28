@@ -1,10 +1,13 @@
 from sqlalchemy import create_engine, Column, String, Date, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
 
-# 🌟 แก้ไขตรงนี้: เอาลิงก์ URI ที่ก๊อบปี้มาจาก Supabase ในส่วนที่ 1 มาวางทับตรงนี้ได้เลยครับครู
-# (อย่าลืมเปลี่ยนตรงรหัสผ่านให้ถูกต้องนะครับ)
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres.hlxkyxzomfvwwvcmbyxj:Jxricho130768@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require&options=-c%20search_path%3Dpublic"
+# ลิงก์สำรองเผื่อรันในเครื่องตัวเอง (เอาลิงก์ Supabase ของคุณครูใส่ไว้ตรงนี้)
+DEFAULT_URL = "postgresql://postgres.hlxkyxzomfvwwvcmbyxj:Jxricho130768@aws-1-ap-southeast-1.pooler.southeast-1.pooler.supabase.com:6543/postgres?sslmode=require&options=-c%20search_path%3Dpublic"
+
+# ระบบจะวิ่งไปเช็กใน Render ก่อน ถ้าไม่มีค่อยใช้ลิงก์ข้างบน
+SQLALCHEMY_DATABASE_URL = os.environ.get("DATABASE_URL", DEFAULT_URL)
 
 # ปรับการตั้งค่า Engine ให้รองรับการเชื่อมต่อผ่านระบบคลาวด์ออนไลน์
 engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
